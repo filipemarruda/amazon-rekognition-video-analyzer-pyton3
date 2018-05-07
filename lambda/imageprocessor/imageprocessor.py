@@ -10,7 +10,7 @@ import time
 import decimal
 import uuid
 import json
-import cPickle
+import pickle
 import boto3
 import pytz
 from pytz import timezone
@@ -64,8 +64,10 @@ def process_image(event, context):
     for record in event['Records']:
 
         frame_package_b64 = record['kinesis']['data']
-        frame_package = cPickle.loads(base64.b64decode(frame_package_b64))
+        frame_package = pickle.loads(base64.b64decode(frame_package_b64))
 
+        # print(frame_package["ImageBytes"])
+        
         img_bytes = frame_package["ImageBytes"]
         approx_capture_ts = frame_package["ApproximateCaptureTime"]
         frame_count = frame_package["FrameCount"]
@@ -81,7 +83,10 @@ def process_image(event, context):
         mon = now.strftime("%m")
         day = now.strftime("%d")
         hour = now.strftime("%H")
-
+        
+        print(print(time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(approx_capture_ts))))
+        print(img_bytes)
+        
         rekog_response = rekog_client.detect_labels(
             Image={
                 'Bytes': img_bytes

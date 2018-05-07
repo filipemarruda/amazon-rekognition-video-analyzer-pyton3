@@ -3,13 +3,14 @@
 #     http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-import urllib
+import urllib.request
 import sys
+import re
 import datetime
 import base64
 import boto3
 import json
-import cPickle
+import pickle
 import cv2
 from multiprocessing import Pool
 import numpy as np
@@ -46,20 +47,20 @@ def send_jpg(frame_jpg, frame_count, enable_kinesis=True, enable_rekog=False, wr
         }
 
         if write_file:
-            print "Writing file img_{}.jpg".format(frame_count)
+            print("Writing file img_{}.jpg".format(frame_count))
             target = open("img_{}.jpg".format(frame_count), 'w')
             target.write(img_bytes)
             target.close()
 
         #put encoded image in kinesis stream
         if enable_kinesis:
-            print "Sending image to Kinesis"
+            print("Sending image to Kinesis")
             response = kinesis_client.put_record(
                 StreamName="FrameStream",
-                Data=cPickle.dumps(frame_package),
+                Data = pickle.dumps(frame_package),
                 PartitionKey="partitionkey"
             )
-            print response
+            print(response)
 
         if enable_rekog:
             response = rekog_client.detect_labels(
@@ -69,10 +70,10 @@ def send_jpg(frame_jpg, frame_count, enable_kinesis=True, enable_rekog=False, wr
                 MaxLabels=rekog_max_labels,
                 MinConfidence=rekog_min_conf
             )
-            print response
+            print(response)
 
     except Exception as e:
-        print e
+        print(e)
 
 
 def main():
@@ -91,8 +92,8 @@ def main():
         return
 
     print("Capturing from '{}' at a rate of 1 every {} frames...".format(ip_cam_url, capture_rate))
-    stream = urllib.urlopen(ip_cam_url)
-    
+    stream = urllib.request.urlopen(ip_cam_url)
+        
     bytes = ''
     pool = Pool(processes=3)
 
@@ -101,26 +102,62 @@ def main():
         # Capture frame-by-frame
         frame_jpg = ''
 
-        bytes += stream.read(16384*2)
-        b = bytes.rfind('\xff\xd9')
-        a = bytes.rfind('\xff\xd8', 0, b-1)
+        data = stream.read(16384*4)
 
+        a = False
+        b = False
 
-        if a != -1 and b != -1:
-            #print 'Found JPEG markers. Start {}, End {}'.format(a,b)
-            
-            frame_jpg_bytes = bytes[a:b+2]
-            bytes = bytes[b+2:]
+        start = 0
+        m1 = False
+        for d in data:
+            start+=1
+            if m1 == True and d == 0xd8:
+                a = True
+                break
+            if d == 0xff:
+                m1 = True
+                continue
+            m1 = False
+
+        end = 0
+        m1 = False
+        for i in range(start, len(data)):
+            d = data[i]
+            end+=1
+            if m1 == True and d == 0xd9:
+                b = True
+                break
+            if d == 0xff:
+                m1 = True
+                continue
+            m1 = False
+        
+        # bytes += str(data)
+
+        # b = bytes.rfind('\\xff\\xd9')
+        # a = bytes.rfind('\\xff\\xd8', 0, b-1)
+
+        # print('inicio: "%s"' % a)
+        # print('fim: "%s"' % b)
+        # break
+        if a and b and end > start:
+            print('Found JPEG markers. Start {}, End {}'.format(a,b))
+
+            frame_jpg_bytes = bytes[a:b+8]
+            data = data[start-2:end]
 
             if frame_count % capture_rate == 0:
                 
                 #You can perform any image pre-processing here using OpenCV2.
                 #Rotating image 90 degrees to the left:
-                nparr = np.fromstring(frame_jpg_bytes, dtype=np.uint8)
+                nparr = np.fromstring(data, dtype=np.uint8)
                 
                 #Simple and efficient rotation: 90 degrees left = flip + transpose
                 img_cv2_mat = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                # print(img_cv2_mat)
+
                 rotated_img = cv2.transpose(cv2.flip(img_cv2_mat, 0))
+                # print(rotated_img)
                 
                 #Computationally-intensive rotation
                 # (h,w) = img_cv2_mat.shape[:2]
@@ -131,7 +168,6 @@ def main():
                 
                 retval, new_frame_jpg_bytes = cv2.imencode(".jpg", rotated_img)
 
-                #Send to Kinesis
                 result = pool.apply_async(send_jpg, (bytearray(new_frame_jpg_bytes), frame_count, True, False, False,))
 
             frame_count += 1

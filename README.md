@@ -1,6 +1,9 @@
 Create a Serverless Pipeline for Video Frame Analysis and Alerting
 ========
 
+## Important
+This tutorial is just a translation of the AWS oficial [amazon-rekognition-video-analyzer](https://github.com/aws-samples/amazon-rekognition-video-analyzer) tutorial from pyton 2.7 to pyton 3.5.
+
 ## Introduction
 Imagine being able to capture live video streams, identify objects using deep learning, and then trigger actions or notifications based on the identified objects -- all with low latency and without a single server to manage.
 
@@ -39,7 +42,7 @@ Here’s a high-level checklist of what you need to do to setup your development
 
 5. Make sure you choose a region where all of the above services are available. Regions us-east-1 (N. Virginia), us-west-2 (Oregon), and eu-west-1 (Ireland) fulfill this criterion. Visit [this page](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) to learn more about service availability in AWS regions.
 
-6. Use Pip to install [Open CV](https://github.com/opencv/opencv) 3 python dependencies and then compile, build, and install Open CV 3 (required by Video Cap clients). You can follow [this guide](http://www.pyimagesearch.com/2016/11/28/macos-install-opencv-3-and-python-2-7/) to get Open CV 3 up and running on OS X Sierra with Python 2.7. There's [another guide](http://www.pyimagesearch.com/2016/12/05/macos-install-opencv-3-and-python-3-5/) for Open CV 3 and Python 3.5 on OS X Sierra. Other guides exist as well for Windows and Raspberry Pi.
+6. Use Pip to install [Open CV](https://github.com/opencv/opencv) 3 python dependencies and then compile, build, and install Open CV 3 (required by Video Cap clients). You can follow [this guide](https://www.pyimagesearch.com/2016/12/05/macos-install-opencv-3-and-python-3-5/) to get Open CV 3 up and running on OS X Sierra with Python 3.5.
 
 6. Use Pip to install [Boto3](http://boto3.readthedocs.io/en/latest/). Boto is the Amazon Web Services (AWS) SDK for Python, which allows Python developers to write software that makes use of Amazon services like S3 and EC2. Boto provides an easy to use, object-oriented API as well as low-level direct access to AWS services.
 
