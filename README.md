@@ -2,7 +2,7 @@ Create a Serverless Pipeline for Video Frame Analysis and Alerting
 ========
 
 ## Important
-This tutorial is just a translation of the AWS oficial [amazon-rekognition-video-analyzer](https://github.com/aws-samples/amazon-rekognition-video-analyzer) tutorial from pyton 2.7 to pyton 3.5.
+This tutorial is just a translation of the AWS oficial [amazon-rekognition-video-analyzer](https://github.com/aws-samples/amazon-rekognition-video-analyzer) tutorial from Python 2.7 to Python 3.5.
 
 ## Introduction
 Imagine being able to capture live video streams, identify objects using deep learning, and then trigger actions or notifications based on the identified objects -- all with low latency and without a single server to manage.
